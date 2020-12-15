@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  webapi:
+    build:
+      context: web/
+    ports:
+      - "80:80"
+    networks:
+      - apache-http
+
+  nodeapi:
+    build:
+      context: api/
+    ports:
+      - "3000:3000"
+    networks:
+      - apache-http
+    depends_on:
+      - webapi
+
+networks:
+  apache-http:
+    driver: bridge
+

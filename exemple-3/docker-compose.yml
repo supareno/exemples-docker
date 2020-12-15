@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  traefik:
+    image: "traefik:v2.1"
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "./traefik.toml:/etc/traefik/traefik.toml"
+    ports:
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  mariadb:
+    build:
+      context: ./mariadb
+    restart: always
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+      - ./mariadb/conf/mycustom.cnf:/etc/mysql/conf.d/custom.cnf
+      - ./mariadb/init:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=BSc8XS49S9iOeDH0V5zJ
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.mariadb.rule=HostSNI(`ds-mysql-dev.entreprise.local`)
+      - traefik.tcp.services.mariadb.loadbalancer.server.port=3306
+
+  phpmyadmin:
+    depends_on:
+      - mariadb
+    image: "phpmyadmin/phpmyadmin"
+    restart: always
+    environment:
+      - PMA_HOST=mariadb
+      - MYSQL_ROOT_PASSWORD=BSc8XS49S9iOeDH0V5zJ
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.phpmyadmin.rule=Host(`ds-pam-dev.entreprise.local`)
+      - traefik.http.services.phpmyadmin.loadbalancer.server.port=80

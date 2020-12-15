@@ -1,0 +1,18 @@
+version: '3.1'
+services:
+  db-postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-root}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-example}
+    volumes:
+      - ./postgres:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+
+  adminer-postgres:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
